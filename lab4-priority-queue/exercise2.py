@@ -97,6 +97,8 @@ class LinkedList():
     def __getitem__(self, idx):
         if self.root == None:
             return self
+        if idx < 0:
+            idx = self.max + idx
 
         current = self.root
         for _ in range(idx):
