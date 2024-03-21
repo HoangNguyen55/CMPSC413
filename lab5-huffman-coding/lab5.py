@@ -54,12 +54,6 @@ class Heap:
         self.heap.append((item, priority))
         self.move_up(len(self.heap) - 1)
 
-    def peek(self):
-        if len(self.heap) == 0:
-            return None
-
-        return self.heap[0]
-
     #O(logn)
     def delete(self):
         if len(self.heap) == 0:
@@ -70,24 +64,6 @@ class Heap:
         self.heap.pop()
         self.move_down(0)
         return val
-
-    #O(n)
-    def changePriority(self, item, newPriority):
-        index = -1
-            
-        for i, k in enumerate(self.heap):
-            if k[0] == item:
-                index = i
-                break
-        
-        if index == -1:
-            return
-        
-        self.heap[index] = (item, newPriority)
-        if self.compare_parent(index):
-            self.move_up(index)
-        else:
-            self.move_down(index)
 
 class Node():
     def __init__(self, val, right= None, left= None) -> None:
