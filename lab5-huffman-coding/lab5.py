@@ -95,20 +95,25 @@ class Node():
         self.right = right 
         self.left = left
 
-# O(n)
+# This agorithm loop through the string one by one which make its time complexity is O(n)
 def calculate_freq(string):
     freq = {}
     for i in string:
         freq[i] = freq.get(i, 0) + 1
     return freq
 
+# This sorting algorithm is done by looping through all of the frequency list, which is an O(n) operation, inserting in a priority queue built with a min heap, the insertion operation is O(logn) in a min heap, over all it is a O(n*logn) operation
 def sort_by_freq(freq):
     minq = Heap(lambda x, y: x < y)
     for i in freq:
         minq.insert(Node(i), freq[i])
     return minq
 
-def build_huffman_tree(minq: Heap):
+# The huffman tree building agorithm works by repeatedly removing two element, which take O(logn) time, and combining them into a node with left and right side, and add that back in, so in every iteration one element is remove and it is repeat until theres only one element left, which is the huffman tree we want, the time complexity of this would be O(logn*n) which is O(nlogn)
+# however to to build a huffman tree useable by the encoding and decoding process, the text need to be process by calucating the frequnecy and sorting it, so overall the time complexity would be O(n + nlogn + nlogn), which is O(nlogn) after simplication
+def build_huffman_tree(text):
+    minq = sort_by_freq(calculate_freq(text))
+
     while minq.length() > 1:
         l = minq.delete()
         r = minq.delete()
@@ -121,31 +126,30 @@ def build_huffman_tree(minq: Heap):
         return val
     raise Exception("")
 
-def build_code_tree(node: Node, _code = ""):
+# building the tree map required for encoding process is done by traversing the huffman tree using DFS algorithm, which is O(v + e) where v is vertecies and e is edges
+def build_tree_map(node: Node, _code = ""):
     tree_map = {}
     if node.val:
         return {node.val: _code}
 
     if node.left and node.right:
-        tree_map.update(build_code_tree(node.left, _code + "0"))
-        tree_map.update(build_code_tree(node.right, _code + "1"))
+        tree_map.update(build_tree_map(node.left, _code + "0"))
+        tree_map.update(build_tree_map(node.right, _code + "1"))
 
     return tree_map
 
-def encode_file(file):
+# encoding the text requires the building the tree map which is O(v + e) after which the whole input text is loop through which is O(n) operation, so time complexity of encoding the text is O(v + e + n)
+def encode_text(text, huffman_tree):
+    tree_map = build_tree_map(huffman_tree)
     encoded_text = ""
-    encoded_tree = None
-    with open(file) as f:
-        text = f.readline().rstrip()
-        encoded_tree = build_huffman_tree(sort_by_freq(calculate_freq(text)))
-        encode_table = build_code_tree(encoded_tree)
-        for i in text:
-            encoded_text +=  encode_table[i]
-    return encoded_text, encoded_tree
+    for i in text:
+        encoded_text +=  tree_map[i]
+    return encoded_text
 
-def decode_text(text, root_node: Node):
+# decode the text only requires looping through the input text while following the huffman tree provided, so its time complexity is O(n)
+def decode_text(text, huffman_tree: Node):
     final_text = ""
-    val: Node | None = root_node
+    val: Node | None = huffman_tree
     for i in text:
         if i == "0":
             val = val.left # type: ignore
@@ -153,14 +157,21 @@ def decode_text(text, root_node: Node):
             val = val.right # type: ignore
         if val.val != None: # type: ignore
             final_text += val.val # type: ignore
-            val = root_node
+            val = huffman_tree
     return final_text
 
-
-freq = calculate_freq("ABAAABCBCCCDEFFFEE")
-minq = sort_by_freq(freq)
-node = build_huffman_tree(minq)
-codes = build_code_tree(node)
-
-encoded_text, encoded_table = encode_file("test.txt")
-print(decode_text(encoded_text, encoded_table))
+print("-"*50)
+print("Task 1:")
+input = "ABAAABCBCCCDEFFFEE"
+huffman_tree = build_huffman_tree(input)
+print(f"Input: {input}")
+print("Huffman tree map: ", build_tree_map(huffman_tree))
+print("-"*50)
+print("Task 2:")
+print("Encoding text file: 'test.txt'")
+with open('test.txt') as f:
+    input = f.readline().rstrip()
+    huffman_tree = build_huffman_tree(input)
+    encoded_text = encode_text(input, huffman_tree)
+    print("Encoded text: ", encoded_text)
+    print("Decoded text: ", decode_text(encoded_text, huffman_tree))
